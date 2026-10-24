@@ -1,0 +1,47 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: BattleTrust-Engine
+  docker:
+    compose:
+      enabled: false
+  profiles:
+    active: dev
+  task:
+    scheduling:
+      pool:
+        size: 4
+app:
+  cloudinary:
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+    api-key: ${CLOUDINARY_API_KEY:}
+    api-secret: ${CLOUDINARY_API_SECRET:}
+springdoc:
+  api-docs:
+    path: /openapi/v3/api-docs
+  swagger-ui:
+    path: /openapi/swagger-ui.html
+    config-url: /openapi/v3/api-docs/swagger-config
+    url: /openapi/v3/api-docs
+    disable-swagger-default-url: true
+    display-request-duration: true
+    persist-authorization: true
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
+    org.hibernate.orm.jdbc.extract: WARN
+    org.springframework.security: INFO
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+
+ 

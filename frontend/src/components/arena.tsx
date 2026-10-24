@@ -1,0 +1,43 @@
+'use client';
+import { useState } from 'react';
+import { TournamentDiscovery } from './tournament-discovery';
+import { get, money, type Listing } from '@/lib/platform';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { ArrowRight, ArrowUpRight, ShieldCheck, Trophy, Users, Crosshair, Wallet, LockKeyhole, Check, Gamepad2, Menu, X, Radio, Zap, Globe, LogOut, Search } from 'lucide-react';
+import { AuthDialog } from './auth-dialog';
+import { authApi, errorMessage, getLeaderboard } from '@/lib/api';
+import { useAuth } from '@/stores/auth';
+
+export function Arena() {
+  const [auth, setAuth] = useState<'login' | 'register' | null>(null);
+  const [menu, setMenu] = useState(false);
+  const [notice, setNotice] = useState('');
+  const session = useAuth((s) => s.session);
+  const cache = useQueryClient();
+  const leaderboard = useQuery({ queryKey: ['leaderboard'], queryFn: getLeaderboard, refetchInterval: 60000 });
+  const stats = useQuery({ queryKey: ['stats'], queryFn: () => get<{ totalUsers: number; completedTournaments: number; totalPrizePooled: number }>('/api/v1/public/stats'), refetchInterval: 30000 });
+  const leaders = leaderboard.data?.content ?? [];
+  const openAuth = (mode: 'login' | 'register') => { setMenu(false); setAuth(mode); };
+  return <>
+    <header className="header"><div className="nav-wrap"><a className="brand" href="#" aria-label="BattleTrust home"><span className="brand-icon"><ShieldCheck size={25}/></span>BATTLE<span>TRUST</span><small>ENGINE</small></a>
+      <nav className={menu ? 'nav open' : 'nav'} aria-label="Main navigation"><a className="active" href="/tournaments" onClick={() => setMenu(false)}>Tournaments</a><a href="#leaderboard" onClick={() => setMenu(false)}>Leaderboards</a><a href="#how-it-works" onClick={() => setMenu(false)}>How it works</a><a href="#trust" onClick={() => setMenu(false)}>Why BattleTrust <ArrowUpRight size={12}/></a></nav>
+      <div className="nav-actions">{session ? <><a className="player-name text-link" href="/dashboard">Dashboard · {session.user.name}</a><button className="icon-button" aria-label="Sign out" onClick={async () => { try { await authApi.logout(); useAuth.getState().setSession(null); cache.clear(); } catch (e) { setNotice(errorMessage(e)); } }}><LogOut size={18}/></button></> : <><button className="login" onClick={() => openAuth('login')}>Log in</button><button className="button primary small" onClick={() => openAuth('register')}>Join the arena <ArrowUpRight size={16}/></button></>}<button className="mobile-menu icon-button" onClick={() => setMenu(!menu)} aria-label="Toggle navigation" aria-expanded={menu}>{menu ? <X/> : <Menu/>}</button></div>
+    </div></header>
+    <main>
+      <section className="hero"><div className="hero-image"/><div className="hero-grid"/><div className="container hero-content"><motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6 }}><div className="season"><span/> THE NEXT LEVEL OF COMPETITIVE GAMING</div><h1>PLAY HARD.<br/>WIN WITH <span>TRUST.</span></h1><p>Your skill. Your squad. Your winnings.<br/>Compete in epic tournaments with escrow-protected<br className="desktop-break"/> prize pools. Because every victory deserves a fair payout.</p><div className="hero-buttons"><a className="button primary" href="/tournaments">Enter the arena <ArrowUpRight size={19}/></a><button className="button secondary" onClick={() => { window.location.href = '/organizer'; }}><Trophy size={17}/> Host a tournament</button></div><div className="hero-proof"><span><ShieldCheck size={16}/> Escrow protected</span><i/><span><Zap size={16}/> Built for fair play</span><i/><span><Globe size={16}/> Made for Pakistan</span></div></motion.div></div><div className="hero-caption"><span className="live-dot"/> THE ARENA IS CALLING <span>01 / 03</span></div></section>
+      <section className="metrics container" aria-label="Live platform statistics"><div className="metric-intro"><Radio size={18}/><span>THE BATTLETRUST<br/><b>ECOSYSTEM</b></span><small>LIVE PLATFORM</small></div>{[{ icon: Trophy, value: stats.data ? money(stats.data.totalPrizePooled) : '—', label: 'Prize pools protected' }, { icon: Crosshair, value: stats.data ? String(stats.data.completedTournaments) : '—', label: 'Battles completed' }, { icon: Users, value: stats.data ? String(stats.data.totalUsers) : '—', label: 'Competitive gamers' }, { icon: ShieldCheck, value: 'Protected', label: 'Escrow-backed prize pools' }].map(({ icon: Icon, value, label }) => <div className="metric" key={label}><Icon size={21}/><div><strong>{value}</strong><span>{label}</span></div></div>)}</section>
+      <TournamentDiscovery featured/>
+      <section className="trust-band" id="trust"><div className="container trust-inner"><div className="trust-symbol"><ShieldCheck size={50}/></div><div><p className="eyebrow">YOUR PRIZE. OUR PROMISE.</p><h2>All skill. Zero payout anxiety.</h2><p className="muted">Entry fees stay locked in escrow until results are verified. You play. We protect.</p></div><a href="#how-it-works" className="text-link">Meet your safety net <ArrowRight size={17}/></a></div></section>
+      <section className="section container" id="how-it-works"><div className="section-heading"><div><p className="eyebrow"><span/> SIMPLE BY DESIGN. SECURE BY DEFAULT.</p><h2>From lobby to <span>legend.</span></h2></div><span className="quiet-note"><LockKeyhole size={14}/> Trust at every step</span></div><div className="steps">{[{ icon: Wallet, title: 'Lock it in', text: 'Your entry fee is held safely in the escrow vault.' }, { icon: Gamepad2, title: 'Bring your A-game', text: 'Join the room, team up, and let your skills do the talking.' }, { icon: ShieldCheck, title: 'Verify the victory', text: 'Match results are reviewed, with a window for disputes.' }, { icon: Trophy, title: 'Claim your reward', text: 'Verified winnings reach your wallet. Request a withdrawal.' }].map(({ icon: Icon, title, text }, i) => <div className="step" key={title}><div className="step-top"><span><Icon size={24}/></span><small>0{i + 1}</small>{i !== 3 && <ArrowRight size={18}/>}</div><h3>{title}</h3><p>{text}</p></div>)}</div></section>
+      <section className="container community-section" id="leaderboard"><div className="leaderboard"><div className="leaderboard-heading"><div><p className="eyebrow">THE ONES TO BEAT</p><h2>Built different.</h2></div><Trophy className="cyan" size={27}/></div><div className="leader-label"><span>PLAYER</span><span>KILLS</span><span>WIN RATE</span><span>REP</span></div>{leaderboard.isPending ? <p className="muted loading">Loading contenders…</p> : leaders.length ? leaders.map((p, i) => <div className="leader-row" key={p.name}><div className="leader-player"><span className={`rank rank-${i}`}>{String(i + 1).padStart(2, '0')}</span><span className={`avatar avatar-${i}`}>{p.name.slice(0, 1)}</span><b>{p.name}<ShieldCheck size={12}/></b></div><span>{p.totalKills.toLocaleString()}</span><span>{Number(p.winRatePercent).toFixed(1)}%</span><span className="rep">{p.reputationScore}</span></div>) : <p className="muted loading">The leaderboard is waiting for its first champions.</p>}<div className="leader-footer"><span>{leaderboard.isError ? 'Live leaderboard unavailable · try refreshing' : 'Live reputation rankings · refreshes every minute'}</span><button onClick={() => void leaderboard.refetch()} className="text-link">Refresh <ArrowUpRight size={14}/></button></div></div><div className="join-card"><div className="join-glow"/><span className="join-icon"><Crosshair size={35}/></span><p className="eyebrow">STOP WATCHING. START WINNING.</p><h2>Your squad.<br/>Your story.<br/><span>Your arena.</span></h2><p>The next great play could be yours.<br/>Make it count with BattleTrust.</p><button className="button primary" onClick={() => openAuth('register')}>Create your free account <ArrowUpRight size={18}/></button><span className="join-foot"><Check size={14}/> Free to join. Built to compete.</span></div></section>
+    </main><footer className="container footer"><a className="brand" href="#"><ShieldCheck className="cyan" size={23}/> BATTLE<span>TRUST</span></a><span>© {new Date().getFullYear()} BattleTrust Engine. Every victory, earned.</span><a href="#trust">Play fair. Play protected. <ShieldCheck size={13}/></a></footer>
+    {notice && <div className="notice" role="status"><p>{notice}</p><button className="icon-button" onClick={() => setNotice('')} aria-label="Dismiss notification"><X size={18}/></button></div>}
+    {auth && <AuthDialog initial={auth} close={() => setAuth(null)}/>}
+
+  </>;
+}
+
+
+
+

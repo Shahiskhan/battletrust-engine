@@ -1,0 +1,74 @@
+server:
+  port: 8080
+
+app:
+  payments:
+    simulation-enabled: ${PAYMENT_SIMULATION_ENABLED:true}
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+  media:
+    provider: ${MEDIA_PROVIDER:local}
+    storage-directory: ./uploads
+    public-path: /media
+  jwt:
+    # Development-only key; use a unique secret from the deployment secret store in production.
+    secret: ${JWT_SECRET:QmF0dGxlVHJ1c3QtRGV2ZWxvcG1lbnQtS2V5LTIwMjYtU2FmZQ==}
+    access-expiration-ms: 900000
+    issuer: battletrust-engine
+  auth:
+    cookie-secure: false
+    allowed-origin: http://localhost:3000
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+  escrow:
+    winners-percent: ${ESCROW_WINNERS_PERCENT:85.00}
+    leader-percent: ${ESCROW_LEADER_PERCENT:10.00}
+    platform-percent: ${ESCROW_PLATFORM_PERCENT:5.00}
+  wallet:
+    minimum-withdrawal: ${WALLET_MINIMUM_WITHDRAWAL:100.00}
+    maximum-withdrawal: ${WALLET_MAXIMUM_WITHDRAWAL:1000000.00}
+  challenges:
+    min-matches-played: ${CHALLENGE_MIN_MATCHES_PLAYED:3}
+    min-reputation-score: ${CHALLENGE_MIN_REPUTATION_SCORE:50}
+
+spring:
+  docker:
+    compose:
+      enabled: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/bte?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SPRING_MAIL_SMTP_AUTH:true}
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+          starttls:
+            enable: ${SPRING_MAIL_STARTTLS:true}
+management:
+  health:
+    mail:
+      enabled: ${MAIL_ENABLED:false}
